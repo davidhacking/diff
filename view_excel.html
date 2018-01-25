@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+	<script src="jquery-1.11.2.min.js"></script>
+
+	<script type="text/javascript">
+		var test_func = function() {
+			new QWebChannel(qt.webChannelTransport, function (channel) {
+				window.handler = channel.objects.handler;
+				window.handler.test();
+			});
+		}
+		$(function() {
+			var tabs1 =  $(".fake1 li a");
+			tabs1.click(function() {
+				var content = this.hash.replace('/','');
+				tabs1.removeClass("active");
+				$(this).addClass("active");
+		    	$("#content1").find('p').hide();
+		    	$(content).fadeIn(200);
+			});
+			var tabs2 =  $(".fake2 li a");
+			tabs2.click(function() {
+				var content = this.hash.replace('/','');
+				tabs2.removeClass("active");
+				$(this).addClass("active");
+		    	$("#content2").find('p').hide();
+		    	$(content).fadeIn(200);
+			});
+			$("#sheet1tab1").click();
+			$("#sheet2tab1").click();
+		});
+	</script>
+
+	<style>
+		table {
+			border-collapse: collapse;
+		}
+		table, td, th {
+			border: 1px solid black;
+		}
+		@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400&subset=latin,latin-ext);
+
+		body {
+			overflow-y: scroll;
+		}
+		.wrap {
+			marin: 0 auto;
+		}
+		ul.tabs {
+			width: 390px;
+			height: 80px;
+			margin: 0 auto;
+			list-style: none;
+			overflow: hidden;
+			padding: 0;
+		}
+		ul.tabs li {	
+			float: left;
+			width: 130px;
+		}
+		ul.tabs li a {
+			position: relative;
+			display: block;
+			height: 30px;
+			margin-top: 40px;
+			padding: 10px 0 0 0;
+			font-family: 'Open Sans', sans-serif;
+			font-size: 18px;
+			text-align: center;	
+			text-decoration: none;
+			color: #ffffff;
+			background: #6edeef;
+			-webkit-box-shadow: 8px 12px 25px 2px rgba(0,0,0,0.4);
+			   -moz-box-shadow: 8px 12px 25px 2px rgba(0,0,0,0.4);
+			        box-shadow: 8px 12px 25px 2px rgba(0,0,0,0.4);
+			        	border: 0px solid #000000;
+			-webkit-transition: padding 0.2s ease, margin 0.2s ease;
+		       -moz-transition: padding 0.2s ease, margin 0.2s ease;
+		         -o-transition: padding 0.2s ease, margin 0.2s ease;
+		        -ms-transition: padding 0.2s ease, margin 0.2s ease;
+		            transition: padding 0.2s ease, margin 0.2s ease;
+		}
+		.tabs li:first-child a {
+			z-index: 3;
+			-webkit-border-top-left-radius: 8px;
+			    -moz-border-radius-topleft: 8px;
+			        border-top-left-radius: 8px;
+		}
+		.tabs li:nth-child(2) a {
+			z-index: 2;
+		}
+		.tabs li:last-child a {
+			z-index: 1;
+			-webkit-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+			   -moz-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+			        box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		    -webkit-border-top-right-radius: 8px;
+			    -moz-border-radius-topright: 8px;
+			        border-top-right-radius: 8px;
+		}
+		ul.tabs li a:hover {
+			margin: 35px 0 0 0;
+			padding: 10px 0 5px 0;
+		}
+		ul.tabs li a.active {
+			margin: 30px 0 0 0;
+			padding: 10px 0 10px 0;
+			background: #545f60;
+			color: #6edeef;
+			/*color: #ff6831;*/
+			z-index: 4;
+			outline: none;
+		}
+		.group:before,
+		.group:after {
+		    content: " "; /* 1 */
+		    display: table; /* 2 */
+		}
+		.group:after {
+		    clear: both;
+		}
+		#content1 {
+		  width: 390px;
+		  height: 200px;
+		  margin: 0 auto;
+		  background: #545f60;
+		    -webkit-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		   	   -moz-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		   	        box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		  -webkit-border-bottom-right-radius: 8px;
+		   -webkit-border-bottom-left-radius: 8px;
+		      -moz-border-radius-bottomright: 8px;
+		       -moz-border-radius-bottomleft: 8px;
+		          border-bottom-right-radius: 8px;
+		           border-bottom-left-radius: 8px;
+		}
+		#content2 {
+		  width: 390px;
+		  height: 200px;
+		  margin: 0 auto;
+		  background: #545f60;
+		    -webkit-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		   	   -moz-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		   	        box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+		  -webkit-border-bottom-right-radius: 8px;
+		   -webkit-border-bottom-left-radius: 8px;
+		      -moz-border-radius-bottomright: 8px;
+		       -moz-border-radius-bottomleft: 8px;
+		          border-bottom-right-radius: 8px;
+		           border-bottom-left-radius: 8px;
+		}
+		p {
+			font-family: 'Open Sans', sans-serif;
+			padding: 30px 40px;
+			color: #ffffff;
+			line-height: 26px;
+			font-size: 18px;
+			margin: 0;
+		}
+		.fake1 {
+
+		}
+		.fake2 {
+
+		}
+		#one {
+		  
+		}
+		#two {
+		  
+		}
+		#three {
+		  
+		}
+		/*	
+			Side Navigation Menu V2, RWD
+			===================
+			License:
+			https://goo.gl/EaUPrt
+			===================
+			Author: @PableraShow
+
+		 */
+
+		body {
+		  font-family: 'Open Sans', sans-serif;
+		  font-weight: 300;
+		  line-height: 1.42em;
+		  color:#A7A1AE;
+		  background-color:#1F2739;
+		}
+
+		h1 {
+		  font-size:3em; 
+		  font-weight: 300;
+		  line-height:1em;
+		  text-align: center;
+		  color: #4DC3FA;
+		}
+
+		h2 {
+		  font-size:1em; 
+		  font-weight: 300;
+		  text-align: center;
+		  display: block;
+		  line-height:1em;
+		  padding-bottom: 2em;
+		  color: #FB667A;
+		}
+
+		h2 a {
+		  font-weight: 700;
+		  text-transform: uppercase;
+		  color: #FB667A;
+		  text-decoration: none;
+		}
+
+		.blue { color: #185875; }
+		.yellow { color: #FFF842; }
+
+		.container th h1 {
+			font-weight: bold;
+			font-size: 1em;
+			text-align: left;
+			color: #185875;
+		}
+
+		.container td {
+			  font-weight: normal;
+			  font-size: 0.75em;
+		  -webkit-box-shadow: 0 2px 2px -2px #0E1119;
+			 -moz-box-shadow: 0 2px 2px -2px #0E1119;
+			      box-shadow: 0 2px 2px -2px #0E1119;
+		}
+
+		.container {
+			text-align: left;
+			overflow: hidden;
+			width: 80%;
+			margin: 0 auto;
+			display: table;
+			padding: 0 0 8em 0;
+		}
+
+		.container td, .container th {
+			padding-bottom: 1%;
+			padding-top: 1%;
+			padding-left: 1%;  
+		}
+
+		/* Background-color of the odd rows */
+		.container tr:nth-child(odd) {
+			background-color: #323C50;
+		}
+
+		/* Background-color of the even rows */
+		.container tr:nth-child(even) {
+			background-color: #2C3446;
+		}
+
+		.container th {
+			background-color: #1F2739;
+		}
+
+		.container td:first-child { color: #FB667A; }
+
+		.container tr:hover {
+			background-color: #464A52;
+		    -webkit-box-shadow: 0 6px 6px -6px #0E1119;
+			   -moz-box-shadow: 0 6px 6px -6px #0E1119;
+			        box-shadow: 0 6px 6px -6px #0E1119;
+		}
+
+		@media (max-width: 400px) {
+			.container td:nth-child(3),
+			.container th:nth-child(4) { display: none; }
+		}
+	</style>
+
+</head>
+<body>
+	<h1>table1</h1>
+	<table class="container" id="table1">
+		<thead>
+			<tr>
+				<th><h1>Sites</h1></th>
+				<th><h1>Views</h1></th>
+				<th><h1>Clicks</h1></th>
+				<th><h1>Average</h1></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Google</td>
+				<td>9518</td>
+				<td>6369</td>
+				<td>01:32:50</td>
+			</tr>
+			<tr>
+				<td>Twitter</td>
+				<td>7326</td>
+				<td>10437</td>
+				<td>00:51:22</td>
+			</tr>
+			<tr>
+				<td>Amazon</td>
+				<td>4162</td>
+				<td>5327</td>
+				<td>00:24:34</td>
+			</tr>
+	    <tr>
+				<td>LinkedIn</td>
+				<td>3654</td>
+				<td>2961</td>
+				<td>00:12:10</td>
+			</tr>
+	    <tr>
+				<td>CodePen</td>
+				<td>2002</td>
+				<td>4135</td>
+				<td>00:46:19</td>
+			</tr>
+	    <tr>
+				<td>GitHub</td>
+				<td>4623</td>
+				<td>3486</td>
+				<td>00:31:52</td>
+			</tr>
+		</tbody>
+	</table>
+	<h1>table2</h1>
+	<table class="container" id="table2">
+		<thead>
+			<tr>
+				<th><h1>Sites</h1></th>
+				<th><h1>Views</h1></th>
+				<th><h1>Clicks</h1></th>
+				<th><h1>Average</h1></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Google</td>
+				<td>9518</td>
+				<td>6369</td>
+				<td>01:32:50</td>
+			</tr>
+			<tr>
+				<td>Twitter</td>
+				<td>7326</td>
+				<td>10437</td>
+				<td>00:51:22</td>
+			</tr>
+			<tr>
+				<td>Amazon</td>
+				<td>4162</td>
+				<td>5327</td>
+				<td>00:24:34</td>
+			</tr>
+	    <tr>
+				<td>LinkedIn</td>
+				<td>3654</td>
+				<td>2961</td>
+				<td>00:12:10</td>
+			</tr>
+	    <tr>
+				<td>CodePen</td>
+				<td>2002</td>
+				<td>4135</td>
+				<td>00:46:19</td>
+			</tr>
+	    <tr>
+				<td>GitHub</td>
+				<td>4623</td>
+				<td>3486</td>
+				<td>00:31:52</td>
+			</tr>
+		</tbody>
+	</table>
+<input type="button" value="alert" onclick="test_func()" />
+<input type="file" name="theFile" onchange="alert(this.value)"/>
+<table style="margin: 0px auto;">
+	<tr>
+	<td>
+	<div class="wrap">
+		<ul class="tabs group fake1">
+			<li><a id="sheet1tab1" class="active" href="#/one1">Light &</a></li>
+			<li><a href="#/two1">Sexy</a></li>
+			<li><a href="#/three1">Tabs</a></li>
+		</ul>
+		<div id="content1">
+			<p id="one1">Some text about Light sit amet, consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur </p>
+			<p id="two1">Sexy sexy  consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
+			<p id="three1">Tabs , consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
+		</div>
+	</div>
+	</td>
+	<td>
+	<div class="wrap">
+		<ul class="tabs group fake2">
+			<li><a id="sheet2tab1" class="active" href="#/one2">Light &</a></li>
+			<li><a href="#/two2">Sexy</a></li>
+			<li><a href="#/three2">Tabs</a></li>
+		</ul>
+		<div id="content2">
+			<p id="one2">Some text about Light sit amet, consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur </p>
+			<p id="two2">Sexy sexy  consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
+			<p id="three2">Tabs , consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
+		</div>
+	</div>
+	</td>
+	</tr>
+<table>
+</div>
+</body>
+</html>
