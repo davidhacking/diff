@@ -3,35 +3,9 @@
 <head>
 	<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
 	<script src="jquery-1.11.2.min.js"></script>
-
-	<script type="text/javascript">
-		var test_func = function() {
-			new QWebChannel(qt.webChannelTransport, function (channel) {
-				window.handler = channel.objects.handler;
-				window.handler.test();
-			});
-		}
-		$(function() {
-			var tabs1 =  $(".fake1 li a");
-			tabs1.click(function() {
-				var content = this.hash.replace('/','');
-				tabs1.removeClass("active");
-				$(this).addClass("active");
-		    	$("#content1").find('p').hide();
-		    	$(content).fadeIn(200);
-			});
-			var tabs2 =  $(".fake2 li a");
-			tabs2.click(function() {
-				var content = this.hash.replace('/','');
-				tabs2.removeClass("active");
-				$(this).addClass("active");
-		    	$("#content2").find('p').hide();
-		    	$(content).fadeIn(200);
-			});
-			$("#sheet1tab1").click();
-			$("#sheet2tab1").click();
-		});
-	</script>
+	<script src="angular.js"></script>
+	<script src="angular-route.js"></script>
+	<script src="angular-resource.js"></script>
 
 	<style>
 		table {
@@ -251,20 +225,20 @@
 		}
 
 		/* Background-color of the odd rows */
-		.container tr:nth-child(odd) {
+		/*.container tr:nth-child(odd) {
 			background-color: #323C50;
-		}
+		}*/
 
 		/* Background-color of the even rows */
-		.container tr:nth-child(even) {
+		/*.container tr:nth-child(even) {
 			background-color: #2C3446;
-		}
+		}*/
 
 		.container th {
 			background-color: #1F2739;
 		}
 
-		.container td:first-child { color: #FB667A; }
+		/*.container td:first-child { color: #FB667A; }*/
 
 		.container tr:hover {
 			background-color: #464A52;
@@ -279,108 +253,77 @@
 		}
 	</style>
 
+	<script type="text/javascript">
+		var test_func = function() {
+			new QWebChannel(qt.webChannelTransport, function (channel) {
+				window.handler = channel.objects.handler;
+				window.handler.test();
+			});
+		};
+		$(function() {
+			var tabs1 =  $(".fake1 li a");
+			tabs1.click(function() {
+				var content = this.hash.replace('/','');
+				tabs1.removeClass("active");
+				$(this).addClass("active");
+		    	$("#content1").find('p').hide();
+		    	$(content).fadeIn(200);
+			});
+			var tabs2 =  $(".fake2 li a");
+			tabs2.click(function() {
+				var content = this.hash.replace('/','');
+				tabs2.removeClass("active");
+				$(this).addClass("active");
+		    	$("#content2").find('p').hide();
+		    	$(content).fadeIn(200);
+			});
+			$("#sheet1tab1").click();
+			$("#sheet2tab1").click();
+		});
+		var applyData = function(data) {
+			angular.element(document.getElementById('body')).scope().applyData(data);
+		};
+		var app = angular.module('myApp', []);
+		app.filter('spaceFilter', function () {
+			return function (input) {
+				if (!input) {
+					return "N/A";
+				}
+				return input;
+			}
+		});
+		app.controller('myCtrl', function($scope, $sce) {
+			$scope.applyData = function (data) {
+		        $scope.$apply(function() {
+                    $scope.data = data;
+                });
+		    };
+			$scope.tableData = "hehe";
+		});
+	</script>
+
+	
+
 </head>
-<body>
-	<h1>table1</h1>
+<body id="body" ng-app="myApp" ng-controller="myCtrl">
+	<h1>{{data.table1.name}}</h1>
 	<table class="container" id="table1">
-		<thead>
-			<tr>
-				<th><h1>Sites</h1></th>
-				<th><h1>Views</h1></th>
-				<th><h1>Clicks</h1></th>
-				<th><h1>Average</h1></th>
-			</tr>
-		</thead>
 		<tbody>
-			<tr>
-				<td>Google</td>
-				<td>9518</td>
-				<td>6369</td>
-				<td>01:32:50</td>
-			</tr>
-			<tr>
-				<td>Twitter</td>
-				<td>7326</td>
-				<td>10437</td>
-				<td>00:51:22</td>
-			</tr>
-			<tr>
-				<td>Amazon</td>
-				<td>4162</td>
-				<td>5327</td>
-				<td>00:24:34</td>
-			</tr>
-	    <tr>
-				<td>LinkedIn</td>
-				<td>3654</td>
-				<td>2961</td>
-				<td>00:12:10</td>
-			</tr>
-	    <tr>
-				<td>CodePen</td>
-				<td>2002</td>
-				<td>4135</td>
-				<td>00:46:19</td>
-			</tr>
-	    <tr>
-				<td>GitHub</td>
-				<td>4623</td>
-				<td>3486</td>
-				<td>00:31:52</td>
+		    <tr ng-repeat="row in data.table1.data">
+				<td ng-repeat="cell in row" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'blue'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'}">{{cell.value | spaceFilter}}</td>
 			</tr>
 		</tbody>
 	</table>
-	<h1>table2</h1>
+	<hr />
+	<h1>{{data.table2.name}}</h1>
 	<table class="container" id="table2">
-		<thead>
-			<tr>
-				<th><h1>Sites</h1></th>
-				<th><h1>Views</h1></th>
-				<th><h1>Clicks</h1></th>
-				<th><h1>Average</h1></th>
-			</tr>
-		</thead>
 		<tbody>
-			<tr>
-				<td>Google</td>
-				<td>9518</td>
-				<td>6369</td>
-				<td>01:32:50</td>
-			</tr>
-			<tr>
-				<td>Twitter</td>
-				<td>7326</td>
-				<td>10437</td>
-				<td>00:51:22</td>
-			</tr>
-			<tr>
-				<td>Amazon</td>
-				<td>4162</td>
-				<td>5327</td>
-				<td>00:24:34</td>
-			</tr>
-	    <tr>
-				<td>LinkedIn</td>
-				<td>3654</td>
-				<td>2961</td>
-				<td>00:12:10</td>
-			</tr>
-	    <tr>
-				<td>CodePen</td>
-				<td>2002</td>
-				<td>4135</td>
-				<td>00:46:19</td>
-			</tr>
-	    <tr>
-				<td>GitHub</td>
-				<td>4623</td>
-				<td>3486</td>
-				<td>00:31:52</td>
+			<tr ng-repeat="row in data.table2.data">
+				<td ng-repeat="cell in row" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'blue'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'}">{{cell.value | spaceFilter}}</td>
 			</tr>
 		</tbody>
 	</table>
-<input type="button" value="alert" onclick="test_func()" />
-<input type="file" name="theFile" onchange="alert(this.value)"/>
+	<hr />
 <table style="margin: 0px auto;">
 	<tr>
 	<td>
@@ -412,7 +355,7 @@
 	</div>
 	</td>
 	</tr>
-<table>
+</table>
 </div>
 </body>
 </html>

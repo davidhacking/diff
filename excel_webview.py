@@ -14,6 +14,9 @@ from PyQt5.QtNetwork import *
 import sys
 from optparse import OptionParser
 import os
+from read_excel import ExcelReader
+import algo
+import json
  
  
 class MyBrowser(QWebEnginePage):
@@ -62,6 +65,11 @@ https://stackoverflow.com/questions/39544089/how-can-i-access-python-code-from-j
 class CompExcel(QWidget):
 	def __init__(self):
 		super(CompExcel,self).__init__()
+
+		self.cwd = os.getcwd()
+		self.f1name = None
+		self.f2name = None
+
 		mainLayout = QVBoxLayout()
 		hboxLayout = QHBoxLayout()		
 		self.creatChooseFileBox()
@@ -77,7 +85,7 @@ class CompExcel(QWidget):
 		handler = CallHandler()
 		channel.registerObject('handler', handler)
 		self.compView.page().setWebChannel(channel)
-		self.compView.load("file://" + os.getcwd() + "/view_excel.html")
+		self.compView.load("file://" + self.cwd + "/view_excel.html")
 		self.compView.showMaximized()
 
 	def creatChooseFileBox(self):
@@ -86,17 +94,102 @@ class CompExcel(QWidget):
 		# nameLabel = QLabel("tile")
 		# bigEditor = QTextEdit()
 		# bigEditor.setPlainText("this is the text")
-		self.btn1 = QPushButton("file1")
-		self.btn1.clicked.connect(self.getfile)
-		self.btn2 = QPushButton("file2")
-		self.btn2.clicked.connect(self.getfile)
-		layout.addWidget(self.btn1)
-		layout.addWidget(self.btn2)
+		self.file1_btn = QPushButton("file1")
+		self.file1_btn.clicked.connect(self.getfile1)
+		self.file2_btn = QPushButton("file2")
+		self.file2_btn.clicked.connect(self.getfile2)
+		self.start_btn = QPushButton("start")
+		self.start_btn.clicked.connect(self.start)
+		self.reset_btn = QPushButton("reset")
+		self.reset_btn.clicked.connect(self.reset)
+		layout.addWidget(self.file1_btn)
+		layout.addWidget(self.file2_btn)
+		layout.addWidget(self.start_btn)
+		layout.addWidget(self.reset_btn)
 		self.chooseFileBox.setLayout(layout)
 
-	def getfile(self):
-		fname = QFileDialog.getOpenFileName(self, 'Open file', '/Users/david/Downloads',"Excel files (*.xlsx *.xls)")
-		print fname
+	def test_start(self):
+		self.f1name = '/Users/david/Downloads/excel1.xlsx'
+		self.f2name = '/Users/david/Downloads/excel2.xlsx'
+
+
+	def start(self):
+		self.test_start()
+		if self.f1name is None or self.f2name is None:
+			self.hint("Message", "Please set file1 and file2 first")
+			return
+
+		self.file1er = ExcelReader(self.f1name)
+		self.file2er = ExcelReader(self.f2name)
+
+		a = self.file1er.get_sheet_matrix('Sheet1')
+		b = self.file2er.get_sheet_matrix('Sheet1')
+		data = {}
+		data["table1"] = {}
+		data["table1"]["name"] = self.f1name + '[Sheet1]'
+		data["table1"]["data"] = algo.get_diff_matrix(a, b)
+		data["table2"] = {}
+		data["table2"]["name"] = self.f2name + '[Sheet1]'
+		data["table2"]["data"] = algo.get_diff_matrix(b, a)
+		data = json.dumps(data)
+		print data
+		def js_callback(result):
+			print(result)
+		self.compView.page().runJavaScript('applyData(' + data + ');', js_callback)
+
+		self.start_btn.setEnabled(False)
+		pass
+
+	def reset(self):
+		self.f1name = None
+		self.f2name = None
+		self.start_btn.setEnabled(True)
+		self.file1_btn.setText('file1')
+		self.file1_btn.setEnabled(True)
+		self.file2_btn.setText('file2')
+		self.file2_btn.setEnabled(True)
+		pass
+
+	def getfile1(self):
+		self.f1name = QFileDialog.getOpenFileName(self, 'Open file', '/Users/david/Downloads', "Excel files (*.xlsx *.xls)")[0]
+		if os.path.isfile(self.f1name) is False:
+			self.hint("Message", "The input file1 is not a file")
+			self.f1name = None
+			self.file1_btn.setEnabled(True)
+			return
+		name = os.path.basename(self.f1name)
+		self.file1_btn.setText(name[0:5] + "..." if len(name) > 5 else name)
+		self.file1_btn.setEnabled(False)
+
+	def getfile2(self):
+		self.f2name = QFileDialog.getOpenFileName(self, 'Open file', '/Users/david/Downloads', "Excel files (*.xlsx *.xls)")[0]
+		if os.path.isfile(self.f2name) is False:
+			self.hint("Message", "The input file2 is not a file")
+			self.f2name = None
+			self.file2_btn.setEnabled(True)
+			return
+		name = os.path.basename(self.f2name)
+		self.file2_btn.setText(name[0:5] + "..." if len(name) > 5 else name)
+		self.file2_btn.setEnabled(False)
+
+	def hint(self, title, msg):
+		msgBox = QMessageBox( self )
+		msgBox.setIcon(QMessageBox.Information)
+		msgBox.setText(title)
+
+		msgBox.setInformativeText(msg)
+		msgBox.addButton(QMessageBox.Yes)
+		msgBox.addButton(QMessageBox.No)
+
+		msgBox.setDefaultButton(QMessageBox.Yes) 
+		ret = msgBox.exec_()
+
+		if ret == QMessageBox.Yes:
+			print( "Yes" )
+			return
+		else:
+			print( "No" )
+			return
 
 
 if __name__ == '__main__':

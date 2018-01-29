@@ -5,7 +5,7 @@ def lcs(A, B):
 	result = 0
 	if len(A) is 0 or len(B) is 0:
 		result
-	elif A[0] is B[0]:
+	elif A[0] == B[0]:
 		result = 1 + lcs(A[1:len(A)], B[1:len(B)])
 	else:
 		result = max(lcs(A, B[1:len(B)]), lcs(A[1:len(A)], B))
@@ -50,40 +50,94 @@ def calc_row_status(a, b):
 	# 0 for normal, 1 for insert, -1 for delete
 	row_convert_info = []
 	rst = calc_row_status_table(a, b)
-	print rst
 	x = 0
-	for i in range(max(len(a), len(b))):
+	for i in range(len(a)):
 		t = rst.get(i, None)
-		if t is None:
+		if t is None and i < len(a):
 			row_convert_info.append(-1)
-			row_convert_info.append(1)
 		elif t[0] <= i:
 			row_convert_info.append(0)
 			x = t[0]
 		elif t[0] > i:
 			for y in range(x + 1, t[0]):
 				row_convert_info.append(1)
-	return row_convert_info
+			row_convert_info.append(0)
+			x = t[0]
+	for j in range(x + 1, len(b)):
+		row_convert_info.append(1)
+	return row_convert_info, rst
 
 
 def calc_col_status(a, b):
 	# 0 for normal, 1 for insert, -1 for delete
 	col_convert_info = []
-	rst = calc_col_status_table(a, b)
-	print rst
+	cst = calc_col_status_table(a, b)
 	x = 0
 	for i in range(max(len(a[0]), len(b[0]))):
-		t = rst.get(i, None)
-		if t is None:
+		t = cst.get(i, None)
+		if t is None and i < len(a):
 			col_convert_info.append(-1)
-			col_convert_info.append(1)
 		elif t[0] <= i:
 			col_convert_info.append(0)
 			x = t[0]
 		elif t[0] > i:
 			for y in range(x + 1, t[0]):
 				col_convert_info.append(1)
-	return col_convert_info
+			col_convert_info.append(0)
+			x = t[0]
+	for j in range(x + 1, len(b)):
+		col_convert_info.append(1)
+	return col_convert_info, cst
+
+
+def get_diff_matrix(a, b):
+	rs, rst = calc_row_status(a, b)
+	cs, cst = calc_col_status(a, b)
+	print rs, rst
+	print cs, cst
+	# cell {value:, color: w for white r for red b for blue y for yellow}
+	ret_mat = []
+	x = 0
+	for i in range(len(rs)):
+		row = []
+		y = 0
+		for j in range(len(cs)):
+			cell = {}
+			if rs[i] == 0:
+				if cs[j] == 0:
+					cell["value"] = a[x][y]
+					cell["color"] = 'w' if a[x][y] == b[rst[x][0]][cst[y][0]] else 'y'
+				elif cs[j] == -1:
+					cell["value"] = a[x][y]
+					cell["color"] = 'r'
+				elif cs[j] == 1:
+					cell["value"] = ''
+					cell["color"] = 'b'
+			if rs[i] == -1:
+				if cs[j] == 0:
+					cell["value"] = a[x][y]
+					cell["color"] = 'r'
+				elif cs[j] == -1:
+					cell["value"] = ''
+					cell["color"] = 'r'
+				elif cs[j] == 1:
+					cell["value"] = ''
+					cell["color"] = 'b'
+			if rs[i] == 1:
+				if cs[j] == 0 or cs[j] == 1:
+					cell["value"] = ''
+					cell["color"] = 'b'
+				elif cs[j] == -1:
+					cell["value"] = ''
+					cell["color"] = 'r'
+			if cs[j] == 0 or cs[j] == -1:
+				y = y + 1
+			row.append(cell)
+		if rs[i] == 0 or rs[i] == -1:
+			x = x + 1
+		ret_mat.append(row)
+	return ret_mat
+
 
 
 a = [
@@ -119,8 +173,7 @@ d = [
 
 
 if __name__ == "__main__":
-	print calc_row_status(c, d)
-	print calc_col_status(c, d)
+	print get_diff_matrix(d, c)
 
 
 
