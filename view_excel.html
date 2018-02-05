@@ -125,7 +125,7 @@
 		          border-bottom-right-radius: 8px;
 		           border-bottom-left-radius: 8px;
 		}
-		p {
+		.oldp {
 			font-family: 'Open Sans', sans-serif;
 			padding: 30px 40px;
 			color: #ffffff;
@@ -247,9 +247,18 @@
 			        box-shadow: 0 6px 6px -6px #0E1119;
 		}
 
-		@media (max-width: 400px) {
+		@media (max-width: 1000px) {
 			.container td:nth-child(3),
 			.container th:nth-child(4) { display: none; }
+		}
+		.none {
+			display: none;
+		}
+		.tab1 {
+
+		}
+		.selectedColor {
+			background-color: gray;
 		}
 	</style>
 
@@ -261,12 +270,13 @@
 			});
 		};
 		$(function() {
+			$("#content1").find('p').addClass("none");
 			var tabs1 =  $(".fake1 li a");
 			tabs1.click(function() {
 				var content = this.hash.replace('/','');
 				tabs1.removeClass("active");
 				$(this).addClass("active");
-		    	$("#content1").find('p').hide();
+		    	$("#content1 .tab1").hide();
 		    	$(content).fadeIn(200);
 			});
 			var tabs2 =  $(".fake2 li a");
@@ -291,56 +301,179 @@
 				}
 				return input;
 			}
+		}).filter('addOne', function() {
+			return function(input) {
+				return Number.parseInt(input) + 1
+			}
+		}).filter('id', function() {
+			return function(input) {
+				return input[0] + ',' + input[1];
+			}
 		});
 		app.controller('myCtrl', function($scope, $sce) {
+			$scope.colorHis = [];
 			$scope.applyData = function (data) {
 		        $scope.$apply(function() {
                     $scope.data = data;
                 });
+                $("#sheet1tab1").click();
+				$("#sheet2tab1").click();
 		    };
-			$scope.tableData = "hehe";
+		    $scope.clearColor = function() {
+				for (var k = 0; k < $scope.colorHis.length; k++) {
+		    		if ($scope.colorHis[k].f == '1') {
+		    			$scope.data.table1.data[$scope.colorHis[k].i][$scope.colorHis[k].j].color = $scope.colorHis[k].color;
+		    		} else {
+			    		$scope.data.table2.data[$scope.colorHis[k].i][$scope.colorHis[k].j].color = $scope.colorHis[k].color;
+			    	}
+		    	}
+		    	$scope.colorHis = [];
+		    };
+		    $scope.showRowInsDiff = function(index) {
+		    	$scope.clearColor();
+		    	for (var i = 0; i < $scope.data.table1.data[0].length; i++) {
+		    		$scope.colorHis.push({'f': '1', 'i': $scope.data.table1.row_ins[index][0], 'j': i, 'color': $scope.data.table1.data[$scope.data.table1.row_ins[index][0]][i].color});
+		    		$scope.data.table1.data[$scope.data.table1.row_ins[index][0]][i].color = 'g'
+		    		$scope.colorHis.push({'f': '2', 'i': $scope.data.table2.row_ins[index][1], 'j': i, 'color': $scope.data.table2.data[$scope.data.table2.row_ins[index][1]][i].color});
+		    		$scope.data.table2.data[$scope.data.table2.row_ins[index][1]][i].color = 'g';
+		    	}
+		    };
+		    $scope.showColInsDiff = function(index) {
+		    	$scope.clearColor();
+		    	for (var i = 0; i < $scope.data.table1.data.length; i++) {
+		    		$scope.colorHis.push({'f': '1', 'i': i, 'j': $scope.data.table1.col_ins[index][0], 'color': $scope.data.table1.data[i][$scope.data.table1.col_ins[index][0]].color});
+		    		$scope.data.table1.data[i][$scope.data.table1.col_ins[index][0]].color = 'g'
+		    		$scope.colorHis.push({'f': '2', 'i': i, 'j': $scope.data.table2.col_ins[index][1], 'color': $scope.data.table2.data[i][$scope.data.table2.col_ins[index][1]].color});
+		    		$scope.data.table2.data[i][$scope.data.table2.col_ins[index][1]].color = 'g';
+		    	}
+		    };
+		    $scope.showRowDelDiff = function(index1, index2) {
+		    	alert(index1);
+		    };
+		    $scope.onSelected = function(i, j) {
+		    	$scope.clearColor();
+		    	$scope.colorHis.push({'f': '1', 'i': i, 'j': j, 'color': $scope.data.table1.data[i][j].color});
+		    	$scope.colorHis.push({'f': '2', 'i': i, 'j': j, 'color': $scope.data.table2.data[i][j].color});
+		    	$scope.data.table1.data[i][j].color = 'g'
+		    	$scope.data.table2.data[i][j].color = 'g'
+		    };
 		});
+		$("#sheet1tab1").click();
+		$("#sheet2tab1").click();
 	</script>
 
 	
 
 </head>
 <body id="body" ng-app="myApp" ng-controller="myCtrl">
-	<h1>{{data.table1.name}}</h1>
+	
+	<div style='overflow:auto; width:1200px;height:500px; margin: 0 auto;'>
+	
 	<table class="container" id="table1">
+		<h3>{{data.table1.name}}</h3>
 		<tbody>
 		    <tr ng-repeat="row in data.table1.data">
-				<td ng-repeat="cell in row" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'blue'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'}">{{cell.value | spaceFilter}}</td>
+				<td ng-repeat="cell in row" ng-click="onSelected($parent.$index, $index)" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'#76c2f7'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'} || cell.color === 'g' && {'background-color':'blue'}">{{cell.value | spaceFilter}}</td>
 			</tr>
 		</tbody>
 	</table>
+	</div>
 	<hr />
-	<h1>{{data.table2.name}}</h1>
+	<div style='overflow:auto; width:1200px;height:500px; margin: 0 auto;'>
 	<table class="container" id="table2">
+		<h3>{{data.table2.name}}</h3>
 		<tbody>
 			<tr ng-repeat="row in data.table2.data">
-				<td ng-repeat="cell in row" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'blue'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'}">{{cell.value | spaceFilter}}</td>
+				<td ng-repeat="cell in row" ng-style="cell.color === 'w' && {'background-color':'white'} || cell.color === 'b' && {'background-color':'#76c2f7'} || cell.color === 'r' && {'background-color':'red'} || cell.color === 'y' && {'background-color':'yellow'} || cell.color === 'g' && {'background-color':'gray'}">{{cell.value | spaceFilter}}</td>
 			</tr>
 		</tbody>
 	</table>
+	</div>
 	<hr />
 <table style="margin: 0px auto;">
 	<tr>
 	<td>
 	<div class="wrap">
 		<ul class="tabs group fake1">
-			<li><a id="sheet1tab1" class="active" href="#/one1">Light &</a></li>
-			<li><a href="#/two1">Sexy</a></li>
-			<li><a href="#/three1">Tabs</a></li>
+			<li><a id="sheet1tab1" class="active" href="#/one1">行增删</a></li>
+			<li><a href="#/two1">列增删</a></li>
+			<li><a href="#/three1">单元格改动</a></li>
 		</ul>
 		<div id="content1">
-			<p id="one1">Some text about Light sit amet, consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur </p>
-			<p id="two1">Sexy sexy  consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
-			<p id="three1">Tabs , consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
+			<div class="tab1 oldp" id="one1">
+				共计新增{{data.table1.row_ins.length}}行，删除{{data.table1.row_del.length}}行
+				<table>
+					<tr>
+						<th>改动</th>
+						<th>行号</th>
+					</tr>
+					<tr ng-repeat="item in data.table1.row_ins">
+						<td>
+							新增
+						</td>
+						<td>
+							<a ng-click="showRowInsDiff($index)">{{item[0] | addOne}}</a>
+						</td>
+					</tr>
+					<tr ng-repeat="item in data.table1.row_del">
+						<td>
+							删除
+						</td>
+						<td>
+							<a ng-click="showRowDelDiff($index)">{{item | addOne}}</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="tab1 oldp" id="two1">
+				共计新增{{data.table1.col_ins.length}}列，删除{{data.table1.col_del.length}}列
+				<table>
+					<tr>
+						<th>改动</th>
+						<th>列号</th>
+					</tr>
+					<tr ng-repeat="item in data.table1.col_ins">
+						<td>
+							新增
+						</td>
+						<td>
+							<a ng-click="showColInsDiff($index)">{{item[0] | addOne}}</a>
+						</td>
+					</tr>
+					<tr ng-repeat="item in data.table1.col_del">
+						<td>
+							删除
+						</td>
+						<td>
+							<a ng-click="showDelDiff($index)">{{item | addOne}}</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="tab1 oldp" id="three1">
+				<table>
+				<tr>
+					<td>坐标</td>
+					<td>旧值</td>
+					<td>新值</td>
+				</tr>
+				<tr ng-repeat="item in data.cell_diff_A2B">
+					<td>
+					<a ng-click="showCellDiff($index)">{{item}}</a>
+					</td>
+					<td>
+						{{data.table1.data[item[0][0]][item[0][1]].value}}
+					</td>
+					<td>
+						{{data.table2.data[item[1][0]][item[1][1]].value}}
+					</td>
+				</tr>
+				</table>
+			</div>
 		</div>
 	</div>
 	</td>
-	<td>
+	<!-- <td>
 	<div class="wrap">
 		<ul class="tabs group fake2">
 			<li><a id="sheet2tab1" class="active" href="#/one2">Light &</a></li>
@@ -353,7 +486,7 @@
 			<p id="three2">Tabs , consectetur adipisicing elit. Pariatur modi quod quo iure recusandae eligendi q.t, consectetur adipisicing elit. Pariatur modi quod quo iureq</p>
 		</div>
 	</div>
-	</td>
+	</td> -->
 	</tr>
 </table>
 </div>

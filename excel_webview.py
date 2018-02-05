@@ -17,6 +17,8 @@ import os
 from read_excel import ExcelReader
 import algo
 import json
+from functools import partial
+import time
  
  
 class MyBrowser(QWebEnginePage):
@@ -70,14 +72,41 @@ class CompExcel(QWidget):
 		self.f1name = None
 		self.f2name = None
 
+		# self.xlsWD = self.cwd
+		self.xlsWD = '/Users/david/Downloads'
+		rightLayout = QVBoxLayout()
 		mainLayout = QVBoxLayout()
 		hboxLayout = QHBoxLayout()		
 		self.creatChooseFileBox()
 		hboxLayout.addWidget(self.chooseFileBox)
 		self.createCompView()
-		hboxLayout.addWidget(self.compView)
+		self.createTab()
+		rightLayout.addWidget(self.tabBox)
+		rightLayout.addWidget(self.compView)
+		hboxLayout.addLayout(rightLayout)
 		mainLayout.addLayout(hboxLayout)
 		self.setLayout(mainLayout)
+
+	def createTab(self):
+		self.tabBox = QGroupBox("")
+		self.tabBoxLayout = QHBoxLayout()
+		self.tabBox.setLayout(self.tabBoxLayout)
+		pass
+
+	def onTabBtnSelected(self, name):
+		def js_callback(result):
+			print(result)
+		print name
+		self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
+
+	def createTabBtns(self, names):
+		for name in names:
+			print 'createTabBtns', name
+			btn = QPushButton(name)
+			# btn.clicked.connect(lambda: self.onTabBtnSelected(name))  用lambda两个的onclick绑定都在最后一个上
+			btn.clicked.connect(partial(self.onTabBtnSelected, name))  
+			self.tabBoxLayout.addWidget(btn)
+		pass
 
 	def createCompView(self):
 		self.compView = Browser()
@@ -89,7 +118,7 @@ class CompExcel(QWidget):
 		self.compView.showMaximized()
 
 	def creatChooseFileBox(self):
-		self.chooseFileBox = QGroupBox("Vbox layout")
+		self.chooseFileBox = QGroupBox("")
 		layout = QVBoxLayout() 
 		# nameLabel = QLabel("tile")
 		# bigEditor = QTextEdit()
@@ -108,13 +137,24 @@ class CompExcel(QWidget):
 		layout.addWidget(self.reset_btn)
 		self.chooseFileBox.setLayout(layout)
 
+	def test4(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/4/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/4/b.xlsx'
+
+	def test5(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/5/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/5/b.xlsx'
+
 	def test_start(self):
 		self.f1name = '/Users/david/Downloads/excel1.xlsx'
 		self.f2name = '/Users/david/Downloads/excel2.xlsx'
 
 
+
 	def start(self):
-		self.test_start()
+		# self.test_start()
+		# self.test4()
+		self.test5()
 		if self.f1name is None or self.f2name is None:
 			self.hint("Message", "Please set file1 and file2 first")
 			return
@@ -122,21 +162,40 @@ class CompExcel(QWidget):
 		self.file1er = ExcelReader(self.f1name)
 		self.file2er = ExcelReader(self.f2name)
 
-		a = self.file1er.get_sheet_matrix('Sheet1')
-		b = self.file2er.get_sheet_matrix('Sheet1')
-		data = {}
-		data["table1"] = {}
-		data["table1"]["name"] = self.f1name + '[Sheet1]'
-		data["table1"]["data"] = algo.get_diff_matrix(a, b)
-		data["table2"] = {}
-		data["table2"]["name"] = self.f2name + '[Sheet1]'
-		data["table2"]["data"] = algo.get_diff_matrix(b, a)
-		data = json.dumps(data)
-		print data
-		def js_callback(result):
-			print(result)
-		self.compView.page().runJavaScript('applyData(' + data + ');', js_callback)
+		file1SheetNames = self.file1er.get_sheets_names()
+		file2SheetNames = self.file2er.get_sheets_names()
 
+		self.cmpRet = {}
+		names = []
+		for fn in file1SheetNames:
+			if fn in file2SheetNames:
+				start = time.clock()
+				print fn
+				names.append(fn)
+				a = self.file1er.get_sheet_matrix(fn)
+				b = self.file2er.get_sheet_matrix(fn)
+				data = {}
+				data["table1"] = {}
+				data["table1"]["name"] = self.f1name + '[' + fn + ']'
+				data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = algo.get_diff_matrix(a, b)
+				data["table2"] = {}
+				data["table2"]["name"] = self.f2name + '[' + fn + ']'
+				data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = algo.get_diff_matrix(b, a)
+				data["cell_diff_A2B"] = algo.get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
+				data["table1"]["row_ins"] = algo.get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
+				data["table1"]["col_ins"] = algo.get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
+				data["table1"]["row_del"] = row_del_A
+				data["table1"]["col_del"] = col_del_A
+				data["table2"]["row_ins"] = algo.get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)
+				data["table2"]["col_ins"] = algo.get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
+				data["table2"]["row_del"] = row_del_B
+				data["table2"]["col_del"] = col_del_B
+				data = json.dumps(data)
+				self.cmpRet[fn] = data
+				elapsed = (time.clock() - start)
+				print("Time used:",elapsed)
+		self.createTabBtns(names)
+		print self.cmpRet
 		self.start_btn.setEnabled(False)
 		pass
 
@@ -151,7 +210,7 @@ class CompExcel(QWidget):
 		pass
 
 	def getfile1(self):
-		self.f1name = QFileDialog.getOpenFileName(self, 'Open file', '/Users/david/Downloads', "Excel files (*.xlsx *.xls)")[0]
+		self.f1name = QFileDialog.getOpenFileName(self, 'Open file', self.xlsWD, "Excel files (*.xlsx *.xls)")[0]
 		if os.path.isfile(self.f1name) is False:
 			self.hint("Message", "The input file1 is not a file")
 			self.f1name = None
@@ -162,7 +221,7 @@ class CompExcel(QWidget):
 		self.file1_btn.setEnabled(False)
 
 	def getfile2(self):
-		self.f2name = QFileDialog.getOpenFileName(self, 'Open file', '/Users/david/Downloads', "Excel files (*.xlsx *.xls)")[0]
+		self.f2name = QFileDialog.getOpenFileName(self, 'Open file', self.xlsWD, "Excel files (*.xlsx *.xls)")[0]
 		if os.path.isfile(self.f2name) is False:
 			self.hint("Message", "The input file2 is not a file")
 			self.f2name = None
