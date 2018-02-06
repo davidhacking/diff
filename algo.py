@@ -3,6 +3,9 @@
 
 import time
 
+def cmp(a, b):
+        return (a > b) - (a < b)
+
 def lcs(A, B, lenA, lenB):
 	result = 0
 	if lenA == 0 or lenB == 0:

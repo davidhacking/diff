@@ -42,8 +42,8 @@ class ExcelReader:
 
 if __name__ == '__main__':
 	er = ExcelReader('/Users/david/Downloads/excel1.xlsx')
-	print er.get_sheets_names()
-	print er.get_sheet_matrix('Sheet1')
+	print (er.get_sheets_names())
+	print (er.get_sheet_matrix('Sheet1'))
 
 
 

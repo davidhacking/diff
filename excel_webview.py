@@ -77,10 +77,9 @@ def replaceFileStr(fileOld, fileNew, strOld, strNew):
 		os.remove(fileNew)
 	except OSError:
 		pass
-	with open(fileOld, "rt") as fin:
-		with open(fileNew, "w+") as fout:
+	with open(fileOld, "rt", encoding='UTF-8') as fin:
+		with open(fileNew, "w+", encoding='UTF-8') as fout:
 			for line in fin:
-				print line
 				fout.write(line.replace(strOld, strNew))
 
 class CompExcel(QWidget):
@@ -146,7 +145,7 @@ class CompExcel(QWidget):
 		"""
 		size = 1024 * 1024
 		# size = 98
-		for i in range(len(self.cmpRet[name]) / size + 1):
+		for i in range(int(len(self.cmpRet[name]) / size) + 1):
 			self.compView.page().runJavaScript("delta('" + self.cmpRet[name][i * size : (i+1) * size] + "');", js_callback)
 		self.compView.page().runJavaScript('applyData();', js_callback)
 		# self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
