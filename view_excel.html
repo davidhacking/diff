@@ -291,7 +291,10 @@
 			$("#sheet2tab1").click();
 		});
 		var applyData = function(data) {
-			angular.element(document.getElementById('body')).scope().applyData(data);
+			return angular.element(document.getElementById('body')).scope().applyData(data);
+		};
+		var delta = function(data) {
+			return angular.element(document.getElementById('body')).scope().delta(data);
 		};
 		var app = angular.module('myApp', []);
 		app.filter('spaceFilter', function () {
@@ -312,12 +315,30 @@
 		});
 		app.controller('myCtrl', function($scope, $sce) {
 			$scope.colorHis = [];
+			$scope.tmpData = '';
+			$scope.delta = function(data) {
+				$scope.$apply(function() {
+					if ($scope.tmpData == '') 
+						$scope.tmpData = data;
+					else
+						$scope.tmpData += data;
+				});
+				return "delta";
+			};
 			$scope.applyData = function (data) {
 		        $scope.$apply(function() {
-                    $scope.data = data;
+		        	if (data)
+                    	$scope.data = data;
+                    else
+                    	if ($scope.tmpData) {
+                    		// console.error($scope.tmpData);
+                    		$scope.data = JSON.parse($scope.tmpData);
+                    		$scope.tmpData = '';
+                    	}
                 });
                 $("#sheet1tab1").click();
 				$("#sheet2tab1").click();
+				return "applyData";
 		    };
 		    $scope.clearColor = function() {
 				for (var k = 0; k < $scope.colorHis.length; k++) {

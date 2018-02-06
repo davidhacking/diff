@@ -1,16 +1,41 @@
 #!/usr/bin/python
 # -*- utf-8 -*-
 
-def lcs(A, B):
+import time
+
+def lcs(A, B, lenA, lenB):
 	result = 0
-	if len(A) is 0 or len(B) is 0:
+	if lenA == 0 or lenB == 0:
 		result
 	elif A[0] == B[0]:
-		result = 1 + lcs(A[1:len(A)], B[1:len(B)])
+		result = 1 + lcs(A[1:lenA], B[1:lenB], lenA - 1, lenB - 1)
 	else:
-		result = max(lcs(A, B[1:len(B)]), lcs(A[1:len(A)], B))
+		result = max(lcs(A, B[1:lenB], lenA, lenB - 1), lcs(A[1:lenA], B, lenA - 1, lenB))
 	return result
 
+def lcsV2(A, B):
+	sup = []
+	m = len(A) + 1
+	n = len(B) + 1
+	for i in range(m):
+		sup.append([])
+		for j in range(n):
+			sup[i].append(0)
+	for i in range(1, m):
+		for j in range(1, n):
+			if A[i - 1] == B[j - 1]:
+				sup[i][j] = sup[i][j] + 1
+			elif sup[i - 1][j] >= sup[i][j - 1]:
+				sup[i][j] = sup[i - 1][j]
+			else:
+				sup[i][j] = sup[i][j - 1];
+	return sup[m - 1][n - 1]
+
+def lcsV3(A, B):
+	if cmp(A, B) == 0:
+		return len(A)
+	else:
+		return lcsV2(A, B)
 
 def column(matrix, i):
     return [row[i] for row in matrix]
@@ -22,10 +47,16 @@ def calc_row_status_table(a, b):
 	for x in range(len(a)):
 		res = [0, -1]
 		for y in range(i, len(b)):
-			t = lcs(a[x], b[y])
+			lenA = len(a[x])
+			lenB = len(b[y])
+			# print lenA, lenB
+			# t = lcs(a[x], b[y], lenA, lenB)
+			t = lcsV3(a[x], b[y])
 			if res[0] < t:
 				res[0] = t
 				res[1] = y
+			if t == lenA or t == lenB:
+				break
 		if res[0] > 0:
 			rst[x] = [res[1], res[0]]
 			i = res[1] + 1
@@ -39,10 +70,15 @@ def calc_col_status_table(a, b):
 			res = [0, -1]
 			if len(b) > 0:
 				for y in range(i, len(b[0])):
-					t = lcs(column(a, x), column(b, y))
+					lenA = len(column(a, x))
+					lenB = len(column(b, y))
+					# t = lcs(column(a, x), column(b, y), lenA, lenB)
+					t = lcsV3(column(a, x), column(b, y))
 					if res[0] < t:
 						res[0] = t
 						res[1] = y
+					if t == lenA or t == lenB:
+						break
 				if res[0] > 0:
 					rst[x] = [res[1], res[0]]
 					i = res[1] + 1
@@ -51,11 +87,14 @@ def calc_col_status_table(a, b):
 def calc_row_status(a, b):
 	# 0 for normal, 1 for insert, -1 for delete
 	row_convert_info = []
+	start = time.clock()
 	rst = calc_row_status_table(a, b)
+	elapsed = (time.clock() - start)
+	print 'lcs time: ', elapsed
 	row_ins_A2b = {}
 	row_ins_a2A = {}
 	row_del = []
-	x = 0
+	x = -1
 	for i in range(len(a)):
 		t = rst.get(i, None)
 		if t is None:
@@ -81,11 +120,11 @@ def calc_col_status(a, b):
 	# 0 for normal, 1 for insert, -1 for delete
 	col_convert_info = []
 	cst = calc_col_status_table(a, b)
-	print cst
+	# print cst
 	col_ins_A2b = {}
 	col_ins_a2A = {}
 	col_del = []
-	x = 0
+	x = -1
 	if len(a) > 0:
 		for i in range(len(a[0])):
 			t = cst.get(i, None)
@@ -111,8 +150,8 @@ def calc_col_status(a, b):
 def get_diff_matrix(a, b):
 	rs, rst, row_ins_A2b, row_ins_a2A, row_del = calc_row_status(a, b)
 	cs, cst, col_ins_A2b, col_ins_a2A, col_del = calc_col_status(a, b)
-	print rs, rst
-	print cs, cst
+	# print rs, rst
+	# print cs, cst
 	# cell {value:, color: w for white r for red b for blue y for yellow}
 	ret_mat = []
 	cell_diff_a2A = {}
@@ -173,7 +212,7 @@ def get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B
 	return cell_diff_A2B
 
 def get_ins_A2B(ins_A2b, ins_a2A, ins_B2a, ins_b2B):
-	print ins_A2b, ins_a2A, ins_B2a, ins_b2B
+	# print ins_A2b, ins_a2A, ins_B2a, ins_b2B
 	ins_A2B = []
 	for k, v in ins_A2b.items():
 		ins_A2B.append([k, ins_b2B[v]])
@@ -192,12 +231,12 @@ b = [
 
 
 c = [
-		['Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6'],
-		['v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6'],
-		['v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6'],
-		['v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6'],
-		['v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6'],
-		['v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6']
+		['Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6'],
+		['v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6'],
+		['v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6'],
+		['v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6'],
+		['v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6'],
+		['v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6']
 	]
 
 
@@ -210,10 +249,14 @@ d = [
 		['v-6-1', 'v-6-2', 'v-6-3', 'v-6-4', 'v-6-5', 'v-6-7'],
 	]
 
+e = []
+
+f = [['1'], ['2'], ['3'], ['4'], ['5']]
+
 
 if __name__ == "__main__":
-	x, cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = get_diff_matrix(d, c)
-	y, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = get_diff_matrix(c, d)
+	x, cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = get_diff_matrix(e, f)
+	y, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = get_diff_matrix(f, e)
 	print get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
 	print get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
 	print get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)

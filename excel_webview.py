@@ -3,6 +3,7 @@
  
 import PyQt5
 from PyQt5.QtCore import * 
+from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import *
 # from PyQt5.QtWebKitWidgets import QWebView , QWebPage
 from PyQt5.QtWebEngine import *
@@ -71,9 +72,11 @@ class CompExcel(QWidget):
 		self.cwd = os.getcwd()
 		self.f1name = None
 		self.f2name = None
+		self.loadPageList = ["index.html", "view_excel.html"]
+		self.loadPageIndex = 0
 
 		# self.xlsWD = self.cwd
-		self.xlsWD = '/Users/david/Downloads'
+		self.xlsWD = '/Users/david/Downloads/excel_cmp_data'
 		rightLayout = QVBoxLayout()
 		mainLayout = QVBoxLayout()
 		hboxLayout = QHBoxLayout()		
@@ -85,7 +88,21 @@ class CompExcel(QWidget):
 		rightLayout.addWidget(self.compView)
 		hboxLayout.addLayout(rightLayout)
 		mainLayout.addLayout(hboxLayout)
+		self.createProgressBar()
+		mainLayout.addWidget(self.progressBar)
 		self.setLayout(mainLayout)
+
+	def createProgressBar(self):
+		self.progressBar = QProgressBar(self)
+		self.progressBar.setMinimum(0)    
+		self.progressBar.setMaximum(100)  
+
+	def startProgress(self):
+		self.progressBar.setValue(0)
+		self.progressBar.setValue(30)
+
+	def stopProgress(self):
+		self.progressBar.setValue(100)
 
 	def createTab(self):
 		self.tabBox = QGroupBox("")
@@ -94,10 +111,19 @@ class CompExcel(QWidget):
 		pass
 
 	def onTabBtnSelected(self, name):
+		self.changeLoadPageIndex(1)
 		def js_callback(result):
 			print(result)
 		print name
-		self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
+		"""
+		每 256 * 1024字节的传送
+		"""
+		size = 1024 * 1024
+		# size = 98
+		for i in range(len(self.cmpRet[name]) / size + 1):
+			self.compView.page().runJavaScript("delta('" + self.cmpRet[name][i * size : (i+1) * size] + "');", js_callback)
+		self.compView.page().runJavaScript('applyData();', js_callback)
+		# self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
 
 	def createTabBtns(self, names):
 		for name in names:
@@ -108,13 +134,18 @@ class CompExcel(QWidget):
 			self.tabBoxLayout.addWidget(btn)
 		pass
 
+	def delTabBtns(self):
+		for i in reversed(range(self.tabBoxLayout.count())): 
+			self.tabBoxLayout.itemAt(i).widget().deleteLater()
+		pass
+
 	def createCompView(self):
 		self.compView = Browser()
 		channel = QWebChannel()
 		handler = CallHandler()
 		channel.registerObject('handler', handler)
 		self.compView.page().setWebChannel(channel)
-		self.compView.load("file://" + self.cwd + "/view_excel.html")
+		self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
 		self.compView.showMaximized()
 
 	def creatChooseFileBox(self):
@@ -137,6 +168,18 @@ class CompExcel(QWidget):
 		layout.addWidget(self.reset_btn)
 		self.chooseFileBox.setLayout(layout)
 
+	def test1(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/1/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/1/b.xlsx'
+
+	def test2(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/2/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/2/b.xlsx'
+
+	def test3(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/3/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/3/b.xlsx'
+
 	def test4(self):
 		self.f1name = '/Users/david/Downloads/excel_cmp_data/4/a.xlsx'
 		self.f2name = '/Users/david/Downloads/excel_cmp_data/4/b.xlsx'
@@ -145,19 +188,34 @@ class CompExcel(QWidget):
 		self.f1name = '/Users/david/Downloads/excel_cmp_data/5/a.xlsx'
 		self.f2name = '/Users/david/Downloads/excel_cmp_data/5/b.xlsx'
 
+	def test6(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/6/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/6/b.xlsx'
+
 	def test_start(self):
 		self.f1name = '/Users/david/Downloads/excel1.xlsx'
 		self.f2name = '/Users/david/Downloads/excel2.xlsx'
 
-
+	def changeLoadPageIndex(self, index):
+		if self.loadPageIndex != index:
+			self.loadPageIndex = index
+			self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
+			self.compView.showMaximized()
 
 	def start(self):
+		
 		# self.test_start()
+		# self.test1()
+		# self.test2()
+		# self.test3()
 		# self.test4()
-		self.test5()
+		# self.test5()
+		self.test6()
 		if self.f1name is None or self.f2name is None:
 			self.hint("Message", "Please set file1 and file2 first")
 			return
+
+		self.changeLoadPageIndex(1)
 
 		self.file1er = ExcelReader(self.f1name)
 		self.file2er = ExcelReader(self.f2name)
@@ -173,14 +231,18 @@ class CompExcel(QWidget):
 				print fn
 				names.append(fn)
 				a = self.file1er.get_sheet_matrix(fn)
+				print a
 				b = self.file2er.get_sheet_matrix(fn)
+				print b
 				data = {}
 				data["table1"] = {}
 				data["table1"]["name"] = self.f1name + '[' + fn + ']'
 				data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = algo.get_diff_matrix(a, b)
+				print row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A
 				data["table2"] = {}
 				data["table2"]["name"] = self.f2name + '[' + fn + ']'
 				data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = algo.get_diff_matrix(b, a)
+				print row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B
 				data["cell_diff_A2B"] = algo.get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
 				data["table1"]["row_ins"] = algo.get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
 				data["table1"]["col_ins"] = algo.get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
@@ -190,13 +252,21 @@ class CompExcel(QWidget):
 				data["table2"]["col_ins"] = algo.get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
 				data["table2"]["row_del"] = row_del_B
 				data["table2"]["col_del"] = col_del_B
+				print row_del_A
+				print col_del_A
+				print row_del_B
+				print col_del_B
 				data = json.dumps(data)
 				self.cmpRet[fn] = data
 				elapsed = (time.clock() - start)
 				print("Time used:",elapsed)
-		self.createTabBtns(names)
-		print self.cmpRet
-		self.start_btn.setEnabled(False)
+		self.stopProgress()
+		if len(names) > 0:
+			self.createTabBtns(names)
+			self.start_btn.setEnabled(False)
+		else:
+			self.hint("Message", "There is no sheet to be compared in this two file")
+			self.reset()
 		pass
 
 	def reset(self):
@@ -207,6 +277,10 @@ class CompExcel(QWidget):
 		self.file1_btn.setEnabled(True)
 		self.file2_btn.setText('file2')
 		self.file2_btn.setEnabled(True)
+		self.loadPageIndex = 0
+		self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
+		self.delTabBtns()
+		self.progressBar.setValue(0)
 		pass
 
 	def getfile1(self):
@@ -219,6 +293,7 @@ class CompExcel(QWidget):
 		name = os.path.basename(self.f1name)
 		self.file1_btn.setText(name[0:5] + "..." if len(name) > 5 else name)
 		self.file1_btn.setEnabled(False)
+		self.progressBar.setValue(10)
 
 	def getfile2(self):
 		self.f2name = QFileDialog.getOpenFileName(self, 'Open file', self.xlsWD, "Excel files (*.xlsx *.xls)")[0]
@@ -230,6 +305,7 @@ class CompExcel(QWidget):
 		name = os.path.basename(self.f2name)
 		self.file2_btn.setText(name[0:5] + "..." if len(name) > 5 else name)
 		self.file2_btn.setEnabled(False)
+		self.progressBar.setValue(20)
 
 	def hint(self, title, msg):
 		msgBox = QMessageBox( self )
@@ -257,18 +333,3 @@ if __name__ == '__main__':
 	ex.showMaximized()
 	ex.show()
 	sys.exit(app.exec_())
-
-
-# wd = os.getcwd()
-# app = QApplication(sys.argv) 
-# view = Browser()
-# channel = QWebChannel()
-# handler = CallHandler()
-# channel.registerObject('handler', handler)
-# view.page().setWebChannel(channel)
-
-# view.showMaximized()
-# view.load("file://" + wd + "/view_excel.html")
-# # view.page().runJavaScript("alert('hehe')")
-
-# app.exec_()
