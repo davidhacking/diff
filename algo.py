@@ -24,11 +24,11 @@ def lcsV2(A, B):
 	for i in range(1, m):
 		for j in range(1, n):
 			if A[i - 1] == B[j - 1]:
-				sup[i][j] = sup[i][j] + 1
+				sup[i][j] = sup[i - 1][j - 1] + 1
 			elif sup[i - 1][j] >= sup[i][j - 1]:
 				sup[i][j] = sup[i - 1][j]
 			else:
-				sup[i][j] = sup[i][j - 1];
+				sup[i][j] = sup[i][j - 1]
 	return sup[m - 1][n - 1]
 
 def lcsV3(A, B):
@@ -90,7 +90,7 @@ def calc_row_status(a, b):
 	start = time.clock()
 	rst = calc_row_status_table(a, b)
 	elapsed = (time.clock() - start)
-	print 'lcs time: ', elapsed
+	print ('lcs time: ', elapsed)
 	row_ins_A2b = {}
 	row_ins_a2A = {}
 	row_del = []
@@ -150,8 +150,8 @@ def calc_col_status(a, b):
 def get_diff_matrix(a, b):
 	rs, rst, row_ins_A2b, row_ins_a2A, row_del = calc_row_status(a, b)
 	cs, cst, col_ins_A2b, col_ins_a2A, col_del = calc_col_status(a, b)
-	# print rs, rst
-	# print cs, cst
+	print (rs, rst)
+	print (cs, cst)
 	# cell {value:, color: w for white r for red b for blue y for yellow}
 	ret_mat = []
 	cell_diff_a2A = {}
@@ -231,12 +231,12 @@ b = [
 
 
 c = [
-		['Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6', 'Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6'],
-		['v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6', 'v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6'],
-		['v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6', 'v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6'],
-		['v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6', 'v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6'],
-		['v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6', 'v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6'],
-		['v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6', 'v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6']
+		['Col-1', 'Col-2', 'Col-3', 'Col-4', 'Col-5', 'Col-6'],
+		['v-1-1', 'v-1-2', 'v-1-3', 'v-1-4', 'v-1-5', 'v-1-6'],
+		['v-2-1', 'v-2-2', 'v-2-3', 'v-2-4', 'v-2-5', 'v-2-6'],
+		['v-3-1', 'v-3-2', 'v-3-3', 'v-3-4', 'v-3-5', 'v-3-6'],
+		['v-4-1', 'v-4-2', 'v-4-3', 'v-4-4', 'v-4-5', 'v-4-6'],
+		['v-5-1', 'v-5-2', 'v-5-3', 'v-5-4', 'v-5-5', 'v-5-6']
 	]
 
 
@@ -249,21 +249,22 @@ d = [
 		['v-6-1', 'v-6-2', 'v-6-3', 'v-6-4', 'v-6-5', 'v-6-7'],
 	]
 
-e = []
+e = [[u'A', u'B', u'C', u'D', u'A', u'B', u'D']]
 
-f = [['1'], ['2'], ['3'], ['4'], ['5']]
+f = [[u'B', u'B', u'C', u'', u'A', u'B', u'C', u'D', u'A', u'B', u'', u'A', u'B', u'C', u'D', u'A', u'B', u'C', u'D', u'A', u'B', u'D', u'E']]
 
 
 if __name__ == "__main__":
 	x, cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = get_diff_matrix(e, f)
 	y, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = get_diff_matrix(f, e)
-	print get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
-	print get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
-	print get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)
-	print get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
-	print get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
-	print row_del_A, col_del_A
-	print row_del_B, col_del_B
+	print ("get_cell_diff_A2B")
+	print (get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a))
+	print (get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B))
+	print (get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A))
+	print (get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B))
+	print (get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A))
+	print (row_del_A, col_del_A)
+	print (row_del_B, col_del_B)
 	# print calc_col_status(c, d)
 	# print calc_col_status(d, c)
 

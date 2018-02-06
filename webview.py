@@ -3,12 +3,9 @@
 import PyQt5
 from PyQt5.QtCore import QUrl 
 from PyQt5.QtWidgets import QApplication, QWidget
-# from PyQt5.QtWebKitWidgets import QWebView , QWebPage
-from PyQt5.QtWebEngine import *
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWebChannel import *
 from PyQt5.QtWebEngineCore import *
-# from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtNetwork import *
 import sys
 from optparse import OptionParser

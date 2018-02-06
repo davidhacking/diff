@@ -5,12 +5,9 @@ import PyQt5
 from PyQt5.QtCore import * 
 from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import *
-# from PyQt5.QtWebKitWidgets import QWebView , QWebPage
-from PyQt5.QtWebEngine import *
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWebChannel import *
 from PyQt5.QtWebEngineCore import *
-# from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtNetwork import *
 import sys
 from optparse import OptionParser
@@ -20,6 +17,14 @@ import algo
 import json
 from functools import partial
 import time
+import hashlib
+
+def md5(fname):
+	hash_md5 = hashlib.md5()
+	with open(fname, "rb") as f:
+		for chunk in iter(lambda: f.read(4096), b""):
+			hash_md5.update(chunk)
+	return hash_md5.hexdigest()
  
  
 class MyBrowser(QWebEnginePage):
@@ -65,11 +70,32 @@ js call python
 https://stackoverflow.com/questions/39544089/how-can-i-access-python-code-from-javascript-in-pyqt-5-7
 """
 
+def replaceFileStr(fileOld, fileNew, strOld, strNew):
+	if os.path.exists(fileOld) is False:
+		return
+	try:
+		os.remove(fileNew)
+	except OSError:
+		pass
+	with open(fileOld, "rt") as fin:
+		with open(fileNew, "w+") as fout:
+			for line in fin:
+				print line
+				fout.write(line.replace(strOld, strNew))
+
 class CompExcel(QWidget):
 	def __init__(self):
 		super(CompExcel,self).__init__()
 
-		self.cwd = os.getcwd()
+		# modify html
+		# {__cwd__}
+		import platform
+		if platform.system() == "Windows":
+			self.cwd = "file:///" + os.getcwd()
+		else:
+			self.cwd = "file://" + os.getcwd()
+		replaceFileStr(os.getcwd() + "/view_excel.template.html", os.getcwd() + "/view_excel.html", "{__cwd__}", self.cwd)
+
 		self.f1name = None
 		self.f2name = None
 		self.loadPageList = ["index.html", "view_excel.html"]
@@ -114,7 +140,7 @@ class CompExcel(QWidget):
 		self.changeLoadPageIndex(1)
 		def js_callback(result):
 			print(result)
-		print name
+		print (name)
 		"""
 		每 256 * 1024字节的传送
 		"""
@@ -127,7 +153,7 @@ class CompExcel(QWidget):
 
 	def createTabBtns(self, names):
 		for name in names:
-			print 'createTabBtns', name
+			print ('createTabBtns', name)
 			btn = QPushButton(name)
 			# btn.clicked.connect(lambda: self.onTabBtnSelected(name))  用lambda两个的onclick绑定都在最后一个上
 			btn.clicked.connect(partial(self.onTabBtnSelected, name))  
@@ -145,7 +171,7 @@ class CompExcel(QWidget):
 		handler = CallHandler()
 		channel.registerObject('handler', handler)
 		self.compView.page().setWebChannel(channel)
-		self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
+		self.compView.load(self.cwd + "/" + self.loadPageList[self.loadPageIndex])
 		self.compView.showMaximized()
 
 	def creatChooseFileBox(self):
@@ -199,7 +225,7 @@ class CompExcel(QWidget):
 	def changeLoadPageIndex(self, index):
 		if self.loadPageIndex != index:
 			self.loadPageIndex = index
-			self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
+			self.compView.load(self.cwd + "/" + self.loadPageList[self.loadPageIndex])
 			self.compView.showMaximized()
 
 	def start(self):
@@ -210,9 +236,15 @@ class CompExcel(QWidget):
 		# self.test3()
 		# self.test4()
 		# self.test5()
-		self.test6()
+		# self.test6()
 		if self.f1name is None or self.f2name is None:
 			self.hint("Message", "Please set file1 and file2 first")
+			return
+
+		# same file?
+		if md5(self.f1name) == md5(self.f2name):
+			self.hint("Message", "The two file are the same")
+			self.reset()
 			return
 
 		self.changeLoadPageIndex(1)
@@ -228,23 +260,24 @@ class CompExcel(QWidget):
 		for fn in file1SheetNames:
 			if fn in file2SheetNames:
 				start = time.clock()
-				print fn
+				print (fn)
 				names.append(fn)
 				a = self.file1er.get_sheet_matrix(fn)
-				print a
+				print (a)
 				b = self.file2er.get_sheet_matrix(fn)
-				print b
+				print (b)
 				data = {}
 				data["table1"] = {}
 				data["table1"]["name"] = self.f1name + '[' + fn + ']'
 				data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = algo.get_diff_matrix(a, b)
-				print row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A
+				print (data["table1"]["data"])
 				data["table2"] = {}
 				data["table2"]["name"] = self.f2name + '[' + fn + ']'
 				data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = algo.get_diff_matrix(b, a)
-				print row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B
+				print (row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B)
 				data["cell_diff_A2B"] = algo.get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
 				data["table1"]["row_ins"] = algo.get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
+				print ('row_ins', data["table1"]["row_ins"])
 				data["table1"]["col_ins"] = algo.get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
 				data["table1"]["row_del"] = row_del_A
 				data["table1"]["col_del"] = col_del_A
@@ -252,10 +285,10 @@ class CompExcel(QWidget):
 				data["table2"]["col_ins"] = algo.get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
 				data["table2"]["row_del"] = row_del_B
 				data["table2"]["col_del"] = col_del_B
-				print row_del_A
-				print col_del_A
-				print row_del_B
-				print col_del_B
+				print (row_del_A)
+				print (col_del_A)
+				print (row_del_B)
+				print (col_del_B)
 				data = json.dumps(data)
 				self.cmpRet[fn] = data
 				elapsed = (time.clock() - start)
@@ -278,7 +311,7 @@ class CompExcel(QWidget):
 		self.file2_btn.setText('file2')
 		self.file2_btn.setEnabled(True)
 		self.loadPageIndex = 0
-		self.compView.load("file://" + self.cwd + "/" + self.loadPageList[self.loadPageIndex])
+		self.compView.load(self.cwd + "/" + self.loadPageList[self.loadPageIndex])
 		self.delTabBtns()
 		self.progressBar.setValue(0)
 		pass
