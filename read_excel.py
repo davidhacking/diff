@@ -18,7 +18,7 @@ class ExcelReader:
 		if len(self.sheet_names) > 0:
 			return self.sheet_names
 
-		self.work_book = xl.open_workbook(self.file)
+		self.work_book = xl.open_workbook(self.file, encoding_override="cp1252")
 		dir(self.work_book.sheet_by_name(self.work_book.sheet_names()[0]))
 		self.sheet_names = self.work_book.sheet_names()
 		return self.sheet_names

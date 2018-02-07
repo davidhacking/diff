@@ -18,7 +18,7 @@ import json
 from functools import partial
 import time
 import hashlib
-from io import open
+#from io import open
 
 def md5(fname):
 	hash_md5 = hashlib.md5()
@@ -263,9 +263,9 @@ class CompExcel(QWidget):
 				print (fn)
 				names.append(fn)
 				a = self.file1er.get_sheet_matrix(fn)
-				print (a)
+				# print (a)
 				b = self.file2er.get_sheet_matrix(fn)
-				print (b)
+				# print (b)
 				data = {}
 				data["table1"] = {}
 				data["table1"]["name"] = self.f1name + '[' + fn + ']'
