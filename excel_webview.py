@@ -18,7 +18,7 @@ import json
 from functools import partial
 import time
 import hashlib
-#from io import open
+from io import open
 
 def md5(fname):
 	hash_md5 = hashlib.md5()
@@ -110,6 +110,10 @@ class CompExcel(QWidget):
 		hboxLayout.addWidget(self.chooseFileBox)
 		self.createCompView()
 		self.createTab()
+		self.createAddTab()
+		self.createDelTab()
+		rightLayout.addWidget(self.addTabBox)
+		rightLayout.addWidget(self.delTabBox)
 		rightLayout.addWidget(self.tabBox)
 		rightLayout.addWidget(self.compView)
 		hboxLayout.addLayout(rightLayout)
@@ -130,8 +134,20 @@ class CompExcel(QWidget):
 	def stopProgress(self):
 		self.progressBar.setValue(100)
 
+	def createAddTab(self):
+		self.addTabBox = QGroupBox("Sheet增加")
+		self.addTabBoxLayout = QHBoxLayout()
+		self.addTabBox.setLayout(self.addTabBoxLayout)
+		pass
+
+	def createDelTab(self):
+		self.delTabBox = QGroupBox("Sheet删除")
+		self.delTabBoxLayout = QHBoxLayout()
+		self.delTabBox.setLayout(self.delTabBoxLayout)
+		pass
+
 	def createTab(self):
-		self.tabBox = QGroupBox("")
+		self.tabBox = QGroupBox("Sheet对比")
 		self.tabBoxLayout = QHBoxLayout()
 		self.tabBox.setLayout(self.tabBoxLayout)
 		pass
@@ -160,9 +176,25 @@ class CompExcel(QWidget):
 			self.tabBoxLayout.addWidget(btn)
 		pass
 
+	def createAddTabBtns(self, names):
+		for name in names:
+			btn = QPushButton(name)
+			self.addTabBoxLayout.addWidget(btn)
+		pass
+
+	def createDelTabBtns(self, names):
+		for name in names:
+			btn = QPushButton(name)
+			self.delTabBoxLayout.addWidget(btn)
+		pass
+
 	def delTabBtns(self):
 		for i in reversed(range(self.tabBoxLayout.count())): 
 			self.tabBoxLayout.itemAt(i).widget().deleteLater()
+		for i in reversed(range(self.addTabBoxLayout.count())): 
+			self.addTabBoxLayout.itemAt(i).widget().deleteLater()
+		for i in reversed(range(self.delTabBoxLayout.count())): 
+			self.delTabBoxLayout.itemAt(i).widget().deleteLater()
 		pass
 
 	def createCompView(self):
@@ -218,6 +250,10 @@ class CompExcel(QWidget):
 		self.f1name = '/Users/david/Downloads/excel_cmp_data/6/a.xlsx'
 		self.f2name = '/Users/david/Downloads/excel_cmp_data/6/b.xlsx'
 
+	def test7(self):
+		self.f1name = '/Users/david/Downloads/excel_cmp_data/7/a.xlsx'
+		self.f2name = '/Users/david/Downloads/excel_cmp_data/7/b.xlsx'
+
 	def test_start(self):
 		self.f1name = '/Users/david/Downloads/excel1.xlsx'
 		self.f2name = '/Users/david/Downloads/excel2.xlsx'
@@ -236,7 +272,8 @@ class CompExcel(QWidget):
 		# self.test3()
 		# self.test4()
 		# self.test5()
-		# self.test6()
+		self.test6()
+		# self.test7()
 		if self.f1name is None or self.f2name is None:
 			self.hint("Message", "Please set file1 and file2 first")
 			return
@@ -257,6 +294,8 @@ class CompExcel(QWidget):
 
 		self.cmpRet = {}
 		names = []
+		del_sheets = []
+		add_sheets = []
 		for fn in file1SheetNames:
 			if fn in file2SheetNames:
 				start = time.clock()
@@ -266,33 +305,18 @@ class CompExcel(QWidget):
 				# print (a)
 				b = self.file2er.get_sheet_matrix(fn)
 				# print (b)
-				data = {}
-				data["table1"] = {}
-				data["table1"]["name"] = self.f1name + '[' + fn + ']'
-				data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = algo.get_diff_matrix(a, b)
-				print (data["table1"]["data"])
-				data["table2"] = {}
-				data["table2"]["name"] = self.f2name + '[' + fn + ']'
-				data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = algo.get_diff_matrix(b, a)
-				print (row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B)
-				data["cell_diff_A2B"] = algo.get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
-				data["table1"]["row_ins"] = algo.get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
-				print ('row_ins', data["table1"]["row_ins"])
-				data["table1"]["col_ins"] = algo.get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
-				data["table1"]["row_del"] = row_del_A
-				data["table1"]["col_del"] = col_del_A
-				data["table2"]["row_ins"] = algo.get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)
-				data["table2"]["col_ins"] = algo.get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
-				data["table2"]["row_del"] = row_del_B
-				data["table2"]["col_del"] = col_del_B
-				print (row_del_A)
-				print (col_del_A)
-				print (row_del_B)
-				print (col_del_B)
+				data = algo.getCompareData(a, b, self.f1name, self.f2name, fn)
 				data = json.dumps(data)
 				self.cmpRet[fn] = data
 				elapsed = (time.clock() - start)
 				print("Time used:",elapsed)
+			else:
+				del_sheets.append(fn)
+		for fn in file2SheetNames:
+			if fn not in names and fn not in del_sheets:
+				add_sheets.append(fn)
+		self.createAddTabBtns(add_sheets)
+		self.createDelTabBtns(del_sheets)
 		self.stopProgress()
 		if len(names) > 0:
 			self.createTabBtns(names)

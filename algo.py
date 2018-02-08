@@ -2,6 +2,7 @@
 # -*- utf-8 -*-
 
 import time
+import sys
 
 def cmp(a, b):
         return (a > b) - (a < b)
@@ -66,7 +67,7 @@ def calc_row_status_table(a, b):
 	return rst
 
 def calc_col_status_table(a, b):
-	rst = {};
+	cst = {};
 	i = 0;
 	if len(a) > 0:
 		for x in range(len(a[0])):
@@ -77,23 +78,22 @@ def calc_col_status_table(a, b):
 					lenB = len(column(b, y))
 					# t = lcs(column(a, x), column(b, y), lenA, lenB)
 					t = lcsV3(column(a, x), column(b, y))
+					# print ("x, y, t", x, y, t)
 					if res[0] < t:
 						res[0] = t
 						res[1] = y
 					if t == lenA or t == lenB:
 						break
 				if res[0] > 0:
-					rst[x] = [res[1], res[0]]
+					cst[x] = [res[1], res[0]]
 					i = res[1] + 1
-	return rst
+	return cst
 
 def calc_row_status(a, b):
 	# 0 for normal, 1 for insert, -1 for delete
 	row_convert_info = []
 	start = time.clock()
 	rst = calc_row_status_table(a, b)
-	elapsed = (time.clock() - start)
-	print ('lcs time: ', elapsed)
 	row_ins_A2b = {}
 	row_ins_a2A = {}
 	row_del = []
@@ -151,9 +151,18 @@ def calc_col_status(a, b):
 	return col_convert_info, cst, col_ins_A2b, col_ins_a2A, col_del
 
 def get_diff_matrix(a, b):
+	t1 = time.clock()
 	rs, rst, row_ins_A2b, row_ins_a2A, row_del = calc_row_status(a, b)
+	t2 = time.clock()
+	elapsed = (t2 - t1)
+	print ('calc_row_status time: ', elapsed)
 	cs, cst, col_ins_A2b, col_ins_a2A, col_del = calc_col_status(a, b)
+	t3 = time.clock()
+	elapsed = (t3 - t2)
+	print ('calc_col_status time: ', elapsed)
+	print ("rs, rst")
 	print (rs, rst)
+	print ("cs, cst")
 	print (cs, cst)
 	# cell {value:, color: w for white r for red b for blue y for yellow}
 	ret_mat = []
@@ -209,10 +218,33 @@ def get_diff_matrix(a, b):
 
 def get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a):
 	cell_diff_A2B = []
-	for k, v in cell_diff_A2a.items():
-		t = cell_diff_b2B[cell_diff_a2b[v]]
-		cell_diff_A2B.append([[k[0], k[1]], [t[0], t[1]]])
+	for k, v in cell_diff_a2b.items():
+		try:
+			x = cell_diff_a2A[k]
+			y = cell_diff_b2B[v]
+			cell_diff_A2B.append([[x[0], x[1]], [y[0], y[1]]])
+		except KeyError:
+			pass
 	return cell_diff_A2B
+
+# handle cell diff when row or cell is zero
+def getExtraCellDiff(a, b):
+	extraCellDiff = []
+	am, bm = len(a), len(b)
+	an = 0 if am <= 0 else len(a[0])
+	bn = 0 if bm <= 0 else len(b[0])
+
+	if am < bm or an < bn:
+		for i in range(len(b)):
+			for j in range(len(b[0])):
+				if b[i][j] is not None and b[i][j] != '' and (i >= am or j >= an):
+					extraCellDiff.append([[i, j], [i, j]])
+	if bm < am or bn < an:
+		for i in range(len(a)):
+			for j in range(len(a[0])):
+				if a[i][j] is not None and a[i][j] != '' and (i >= bm or j >= bn):
+					extraCellDiff.append([[i, j], [i, j]])
+	return extraCellDiff
 
 def get_ins_A2B(ins_A2b, ins_a2A, ins_B2a, ins_b2B):
 	# print ins_A2b, ins_a2A, ins_B2a, ins_b2B
@@ -220,6 +252,157 @@ def get_ins_A2B(ins_A2b, ins_a2A, ins_B2a, ins_b2B):
 	for k, v in ins_A2b.items():
 		ins_A2B.append([k, ins_b2B[v]])
 	return ins_A2B
+
+def cellData(a, i, flag):
+	if flag == 0:
+		return a[0][i]
+	else:
+		return a[i][0]
+
+def myLen(a, flag):
+	if flag == 0:
+		return len(a[0])
+	else:
+		return len(a)
+
+def med(a, b, flag):
+	a2b = []
+	for i in range(myLen(a, flag) + 1):
+		a2b.append([])
+		for j in range(myLen(b, flag) + 1):
+			a2b[i].append({})
+			if i == 0 and j == 0:
+				a2b[i][j] = {"dis": 0, "from": ''}
+			elif i == 0 and j != 0:
+				a2b[i][j] = {"dis": j, "from": 'left'}
+			elif i != 0 and j == 0:
+				a2b[i][j] = {"dis": i, "from": 'top'}
+	for i in range(myLen(a, flag)):
+		for j in range(myLen(b, flag)):
+			x = a2b[i][j+1]["dis"] + 1
+			y = a2b[i+1][j]["dis"] + 1
+			z = a2b[i][j]["dis"] + 1 if cellData(a, i, flag) != cellData(b, j, flag) else a2b[i][j]["dis"]
+			m = min(min(x, y), z)
+			a2b[i+1][j+1]["dis"] = m
+			if m == x:
+				a2b[i+1][j+1]["from"] = 'top'
+			elif m == y:
+				a2b[i+1][j+1]["from"] = 'left'
+			else:
+				a2b[i+1][j+1]["from"] = 'TL'
+	op = []
+	i = myLen(a, flag)
+	j = myLen(b, flag)
+	while i >= 0 and j >= 0:
+		if a2b[i][j]["from"] == 'TL':
+			i = i - 1
+			j = j - 1
+			op.insert(0, 0)
+		elif a2b[i][j]["from"] == 'top':
+			i = i - 1
+			op.insert(0, -1)
+		elif a2b[i][j]["from"] == 'left':
+			j = j - 1
+			op.insert(0, 1)
+		else:
+			break
+	return op
+
+def deltaA2B(a, b, op, flag):
+	i, j = 0, 0
+	delta = []
+	cell_diff_a2b = {}
+	A2a = {}
+	a2A = {}
+	row_ins_A2b = {}
+	row_ins_a2A = {}
+	col_ins_A2b = {}
+	col_ins_a2A = {}
+	row_del = []
+	col_del = []
+	for k in range(len(op)):
+		cell = {}
+		if op[k] == 0:
+			if cellData(a, i, flag) == cellData(b, j, flag):
+				cell["value"] = cellData(a, i, flag)
+				cell["color"] = 'w'
+			else:
+				cell["value"] = cellData(a, i, flag)
+				cell["color"] = 'y'
+				cell_diff_a2b[(0, i) if flag == 0 else (i, 0)] = (0, j) if flag == 0 else (j, 0)
+			a2A[(0, i) if flag == 0 else (i, 0)] = (0, k) if flag == 0 else (k, 0)
+			A2a[(0, k) if flag == 0 else (k, 0)] = (0, i) if flag == 0 else (i, 0)
+			if flag == 0:
+				col_ins_a2A[i] = k
+			else:
+				row_ins_a2A[i] = k
+			i = i + 1
+			j = j + 1
+		elif op[k] == 1:
+			cell["value"] = ''
+			cell["color"] = 'b'
+			if flag == 0:
+				col_ins_A2b[k] = j
+			else:
+				row_ins_A2b[k] = j
+			j = j + 1
+		elif op[k] == -1:
+			cell["value"] = cellData(a, i, flag)
+			cell["color"] = 'r'
+			a2A[(0, i) if flag == 0 else (i, 0)] = (0, k) if flag == 0 else (k, 0)
+			A2a[(0, k) if flag == 0 else (k, 0)] = (0, i) if flag == 0 else (i, 0)
+			if flag == 0:
+				col_ins_a2A[i] = k
+			else:
+				row_ins_a2A[i] = k
+			i = i + 1
+			if flag == 0:
+				col_del.append(k)
+			else:
+				row_del.append(k)
+		if flag == 0:
+			delta.append(cell)
+		else:
+			delta.append([cell])
+	if flag == 0:
+		ret = []
+		ret.append(delta)
+		delta = ret
+	return delta, cell_diff_a2b, a2A, A2a, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del, col_del
+
+def getCompareData(a, b, f1name, f2name, fn):
+	data = {}
+	data["table1"] = {}
+	data["table1"]["name"] = f1name + '[' + fn + ']'
+	data["table2"] = {}
+	data["table2"]["name"] = f2name + '[' + fn + ']'
+	# use min edit distance to compare the row one or column one
+	flag = -1
+	if len(a) == 1 and len(b) == 1:
+		flag = 0
+	elif (len(a) > 0 and len(a[0]) == 1) and (len(b) > 0 and len(b[0]) == 1):
+		flag = 1
+
+	if flag == -1:
+		tmpTable1Data = get_diff_matrix(a, b)
+		tmpTable2Data = get_diff_matrix(b, a)
+	else:
+		tmpTable1Data = deltaA2B(a, b, med(a, b, flag), flag)
+		tmpTable2Data = deltaA2B(b, a, med(b, a, flag), flag)
+
+	data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = tmpTable1Data
+	data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = tmpTable2Data
+	data["cell_diff_A2B"] = get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
+	data["extraCellDiff"] = getExtraCellDiff(a, b) if flag == -1 else []
+	data["table1"]["row_ins"] = get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
+	data["table1"]["col_ins"] = get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
+	data["table1"]["row_del"] = row_del_A
+	data["table1"]["col_del"] = col_del_A
+	data["table2"]["row_ins"] = get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)
+	data["table2"]["col_ins"] = get_ins_A2B(col_ins_B2a, col_ins_b2B, col_ins_A2b, col_ins_a2A)
+	data["table2"]["row_del"] = row_del_B
+	data["table2"]["col_del"] = col_del_B
+	return data
 
 a = [
 		['a', 'b', 'c'],

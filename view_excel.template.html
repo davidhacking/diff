@@ -300,6 +300,9 @@
 		var delta = function(data) {
 			return angular.element(document.getElementById('body')).scope().delta(data);
 		};
+		var convertToTitle = function(n) {
+	        return n == 0 ? "" : convertToTitle((--n / 26) | 0) + String.fromCharCode(97 + (n % 26));
+	    };
 		var app = angular.module('myApp', []);
 		app.filter('spaceFilter', function () {
 			return function (input) {
@@ -320,6 +323,9 @@
 		app.controller('myCtrl', function($scope, $sce) {
 			$scope.colorHis = [];
 			$scope.tmpData = '';
+			$scope.convertToTitle = function(n) {
+		        return n == 0 ? "" : $scope.convertToTitle((--n / 26) | 0) + String.fromCharCode(97 + (n % 26));
+		    };
 			$scope.delta = function(data) {
 				$scope.$apply(function() {
 					if ($scope.tmpData == '') 
@@ -335,7 +341,7 @@
                     	$scope.data = data;
                     else
                     	if ($scope.tmpData) {
-                    		// console.error($scope.tmpData);
+                    		console.error($scope.tmpData);
                     		$scope.data = JSON.parse($scope.tmpData);
                     		$scope.tmpData = '';
                     	}
@@ -478,7 +484,7 @@
 				</table>
 			</div>
 			<div class="tab1 oldp" id="three1">
-				共计{{data.table1.data.cell_diff_A2B.length}}个单元格改动过
+				共计{{data.cell_diff_A2B.length + data.extraCellDiff.length}}个单元格改动过
 				<table>
 				<tr>
 					<td>坐标</td>
@@ -487,7 +493,18 @@
 				</tr>
 				<tr ng-repeat="item in data.cell_diff_A2B">
 					<td>
-					<a ng-click="showCellDiff($index)">{{item}}</a>
+					<a ng-click="showCellDiff($index)">[{{item[0][0] + 1}},{{convertToTitle(item[0][1] + 1)}}],[{{item[1][0] + 1}},{{convertToTitle(item[1][1] + 1)}}]</a>
+					</td>
+					<td>
+						{{data.table1.data[item[0][0]][item[0][1]].value}}
+					</td>
+					<td>
+						{{data.table2.data[item[1][0]][item[1][1]].value}}
+					</td>
+				</tr>
+				<tr ng-repeat="item in data.extraCellDiff">
+					<td>
+					<a ng-click="showCellDiff($index)">[{{item[0][0] + 1}},{{convertToTitle(item[0][1] + 1)}}],[{{item[1][0] + 1}},{{convertToTitle(item[1][1] + 1)}}]</a>
 					</td>
 					<td>
 						{{data.table1.data[item[0][0]][item[0][1]].value}}
