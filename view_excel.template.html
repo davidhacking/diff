@@ -470,7 +470,7 @@
 							新增
 						</td>
 						<td>
-							<a ng-click="showColInsDiff($index)">{{item[0] | addOne}}</a>
+							<a ng-click="showColInsDiff($index)">{{convertToTitle(item[0] + 1)}}</a>
 						</td>
 					</tr>
 					<tr ng-repeat="item in data.table1.col_del">
@@ -478,7 +478,7 @@
 							删除
 						</td>
 						<td>
-							<a ng-click="showDelDiff($index)">{{item | addOne}}</a>
+							<a ng-click="showDelDiff($index)">{{convertToTitle(item + 1)}}</a>
 						</td>
 					</tr>
 				</table>

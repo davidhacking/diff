@@ -27,7 +27,7 @@ def lcsV2(A, B):
 			sup[i].append(0)
 	for i in range(1, m):
 		for j in range(1, n):
-			if A[i - 1] == B[j - 1]:
+			if A[i - 1] == B[j - 1] and A[i - 1] != '' and B[j - 1] != '':
 				sup[i][j] = sup[i - 1][j - 1] + 1
 			elif sup[i - 1][j] >= sup[i][j - 1]:
 				sup[i][j] = sup[i - 1][j]
@@ -78,7 +78,6 @@ def calc_col_status_table(a, b):
 					lenB = len(column(b, y))
 					# t = lcs(column(a, x), column(b, y), lenA, lenB)
 					t = lcsV3(column(a, x), column(b, y))
-					# print ("x, y, t", x, y, t)
 					if res[0] < t:
 						res[0] = t
 						res[1] = y
@@ -370,6 +369,21 @@ def deltaA2B(a, b, op, flag):
 		delta = ret
 	return delta, cell_diff_a2b, a2A, A2a, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del, col_del
 
+def computeArea(m, n, rows, cols):
+	s = m * n
+	sr = 0
+	sc = 0
+	for i in range(len(rows)):
+		sr = sr + n
+	for i in range(len(cols)):
+		sc = sc + m
+	print ("computeArea")
+	print (s, sr, sc)
+	if sr == sc and s == sr and s == sc:
+		return (rows, []) if len(rows) < len(cols) else ([], cols)
+	else:
+		return (rows, cols)
+
 def getCompareData(a, b, f1name, f2name, fn):
 	data = {}
 	data["table1"] = {}
@@ -392,10 +406,16 @@ def getCompareData(a, b, f1name, f2name, fn):
 
 	data["table1"]["data"], cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = tmpTable1Data
 	data["table2"]["data"], cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = tmpTable2Data
+	dataRowLen = len(data["table1"]["data"])
+	dataColLen = 0 if dataRowLen == 0 else len(data["table1"]["data"][0])
 	data["cell_diff_A2B"] = get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a)
 	data["extraCellDiff"] = getExtraCellDiff(a, b) if flag == -1 else []
-	data["table1"]["row_ins"] = get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
-	data["table1"]["col_ins"] = get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
+	row_ins_A = get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B)
+	col_ins_A = get_ins_A2B(col_ins_A2b, col_ins_a2A, col_ins_B2a, col_ins_b2B)
+	u, v = computeArea(dataRowLen, dataColLen, row_ins_A, col_ins_A)
+	data["table1"]["row_ins"] = u
+	data["table1"]["col_ins"] = v
+	
 	data["table1"]["row_del"] = row_del_A
 	data["table1"]["col_del"] = col_del_A
 	data["table2"]["row_ins"] = get_ins_A2B(row_ins_B2a, row_ins_b2B, row_ins_A2b, row_ins_a2A)
@@ -441,8 +461,8 @@ f = [[u'B', u'B', u'C', u'', u'A', u'B', u'C', u'D', u'A', u'B', u'', u'A', u'B'
 
 
 if __name__ == "__main__":
-	x, cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = get_diff_matrix(e, f)
-	y, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = get_diff_matrix(f, e)
+	x, cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, row_ins_A2b, row_ins_a2A, col_ins_A2b, col_ins_a2A, row_del_A, col_del_A = deltaA2B(e, f, med(e, f, 0), 0)
+	y, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a, row_ins_B2a, row_ins_b2B, col_ins_B2a, col_ins_b2B, row_del_B, col_del_B = deltaA2B(f, e, med(f, e, 0), 0)
 	print ("get_cell_diff_A2B")
 	print (get_cell_diff_A2B(cell_diff_a2A, cell_diff_A2a, cell_diff_a2b, cell_diff_b2B, cell_diff_B2b, cell_diff_b2a))
 	print (get_ins_A2B(row_ins_A2b, row_ins_a2A, row_ins_B2a, row_ins_b2B))
