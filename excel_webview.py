@@ -20,9 +20,6 @@ import time
 import hashlib
 # from io import open
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 def md5(fname):
 	hash_md5 = hashlib.md5()
 	with open(fname, "rb") as f:

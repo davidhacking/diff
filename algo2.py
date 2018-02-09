@@ -6,7 +6,7 @@ import sys
 import algo
 
 def cmp(a, b):
-		return (a > b) - (a < b)
+	return (a > b) - (a < b)
 
 def lcs(A, B, lenA, lenB):
 	result = 0
@@ -37,12 +37,8 @@ def lcsV2(A, B):
 	return sup[m - 1][n - 1]
 
 def lcsV3(A, B):
-
-	if cmp(A, B) == 0:
-		return len(A)
-	else:
-		lcsValue = lcsV2(A, B)
-		return lcsValue
+        lcsValue = lcsV2(A, B)
+	return lcsValue
 
 def transformMatrix(a):
 	am = len(a)
