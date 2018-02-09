@@ -37,7 +37,7 @@ def lcsV2(A, B):
 	return sup[m - 1][n - 1]
 
 def lcsV3(A, B):
-        lcsValue = lcsV2(A, B)
+	lcsValue = lcsV2(A, B)
 	return lcsValue
 
 def transformMatrix(a):
