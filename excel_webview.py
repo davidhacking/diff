@@ -18,7 +18,7 @@ import json
 from functools import partial
 import time
 import hashlib
-# from io import open
+from io import open
 
 def md5(fname):
 	hash_md5 = hashlib.md5()
