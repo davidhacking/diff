@@ -275,7 +275,7 @@ class CompExcel(QWidget):
 		# self.test3()
 		# self.test4()
 		# self.test5()
-		self.test6()
+		# self.test6()
 		# self.test7()
 		if self.f1name is None or self.f2name is None:
 			self.hint("Message", "Please set file1 and file2 first")
