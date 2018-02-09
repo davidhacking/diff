@@ -13,12 +13,15 @@ import sys
 from optparse import OptionParser
 import os
 from read_excel import ExcelReader
-import algo
+import algo2
 import json
 from functools import partial
 import time
 import hashlib
-from io import open
+# from io import open
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 def md5(fname):
 	hash_md5 = hashlib.md5()
@@ -162,10 +165,10 @@ class CompExcel(QWidget):
 		"""
 		size = 1024 * 1024
 		# size = 98
-		for i in range(int(len(self.cmpRet[name]) / size) + 1):
-			self.compView.page().runJavaScript("delta('" + self.cmpRet[name][i * size : (i+1) * size] + "');", js_callback)
-		self.compView.page().runJavaScript('applyData();', js_callback)
-		# self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
+		# for i in range(int(len(self.cmpRet[name]) / size) + 1):
+		# 	self.compView.page().runJavaScript("delta('" + self.cmpRet[name][i * size : (i+1) * size] + "');", js_callback)
+		# self.compView.page().runJavaScript('applyData();', js_callback)
+		self.compView.page().runJavaScript('applyData(' + self.cmpRet[name] + ');', js_callback)
 
 	def createTabBtns(self, names):
 		for name in names:
@@ -299,17 +302,20 @@ class CompExcel(QWidget):
 		for fn in file1SheetNames:
 			if fn in file2SheetNames:
 				start = time.clock()
-				print (fn)
+				# print (fn)
 				names.append(fn)
 				a = self.file1er.get_sheet_matrix(fn)
 				# print (a)
 				b = self.file2er.get_sheet_matrix(fn)
 				# print (b)
-				data = algo.getCompareData(a, b, self.f1name, self.f2name, fn)
-				data = json.dumps(data)
-				self.cmpRet[fn] = data
+				data = algo2.getCompareData(a, b, self.f1name, self.f2name, fn)
+				# print("before dumps: ", data)
+				jsonData = json.dumps(data) # you cant use this code data = json.dumps(data)
+				self.cmpRet[fn] = jsonData
+				# print("diffData: ", jsonData)
+				# print("after dumps")
 				elapsed = (time.clock() - start)
-				print("Time used:",elapsed)
+				# print("Time used:", elapsed)
 			else:
 				del_sheets.append(fn)
 		for fn in file2SheetNames:

@@ -36,13 +36,29 @@ def lcsV2(A, B):
 	return sup[m - 1][n - 1]
 
 def lcsV3(A, B):
+	# if a, b all none
+	flag1 = 0
+	for i in range(len(A)):
+		if A[i] is not None and A[i] != '':
+			flag1 = flag1 + 1
+
+	flag2 = 0
+	for i in range(len(B)):
+		if B[i] is not None and B[i] != '':
+			flag2 = 1
+			break
+	if flag1 == 0 and flag2 == 0:
+		return len(A)
+
+	if flag1 == 0:
+		return 0
+
 	if cmp(A, B) == 0:
 		return len(A)
 	else:
-		return lcsV2(A, B)
+		lcsValue = lcsV2(A, B)
+		return lcsValue # if lcsValue / float(flag1) > 0.5 else 0
 
-def column(matrix, i):
-    return [row[i] for row in matrix]
 
 
 def calc_row_status_table(a, b):
@@ -56,6 +72,7 @@ def calc_row_status_table(a, b):
 			# print lenA, lenB
 			# t = lcs(a[x], b[y], lenA, lenB)
 			t = lcsV3(a[x], b[y])
+			# print ("ax, by, x, y, lcs", a[x], b[y], x, y, t)
 			if res[0] < t:
 				res[0] = t
 				res[1] = y
@@ -67,21 +84,28 @@ def calc_row_status_table(a, b):
 	return rst
 
 def calc_col_status_table(a, b):
+	m = len(a)
+	n = len(b)
+	lenA = 0 if len(a) <= 0 else len(a[0])
+	lenB = 0 if len(b) <= 0 else len(b[0])
+	colMatA = []
+	for i in range(lenA):
+		colMatA.append([row[i] for row in a])
+	colMatB = []
+	for i in range(lenB):
+		colMatB.append([row[i] for row in b])
 	cst = {};
 	i = 0;
 	if len(a) > 0:
-		for x in range(len(a[0])):
+		for x in range(lenA):
 			res = [0, -1]
 			if len(b) > 0:
-				for y in range(i, len(b[0])):
-					lenA = len(column(a, x))
-					lenB = len(column(b, y))
-					# t = lcs(column(a, x), column(b, y), lenA, lenB)
-					t = lcsV3(column(a, x), column(b, y))
+				for y in range(i, lenB):
+					t = lcsV3(colMatA[x], colMatB[y])
 					if res[0] < t:
 						res[0] = t
 						res[1] = y
-					if t == lenA or t == lenB:
+					if t == m or t == n:
 						break
 				if res[0] > 0:
 					cst[x] = [res[1], res[0]]
